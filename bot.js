@@ -51,32 +51,22 @@ function writeDB(db) {
   }
 }
 
+// 🔧 PARSER BARU: kuat & multiline
 function parseAddText(text) {
-  // Terima format:
-  // /add
-  // title: ....
-  // price: Rp...
-  // image: https://...
-  // aff: https://...
-  // gender: pria|wanita (opsional)
-  const get = (key) => {
-    const m = new RegExp(`^\\s*${key}\\s*:\\s*(.+)$`, "i").exec(text?.replace(/\r/g, "") ?? "");
-    return m ? m[1].trim() : "";
-  };
+  const obj = { title: "", price: "", image: "", aff: "", gender: "" };
+  const lines = (text || "").replace(/\r/g, "").split("\n");
 
-  const item = {
-    title: get("title"),
-    price: get("price"),
-    image: get("image"),
-    aff: get("aff"),
-    gender: get("gender"),
-    created_at: new Date().toISOString(),
-  };
+  for (const line of lines) {
+    const m = line.match(/^\s*([a-z_]+)\s*:\s*(.+)\s*$/i);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    const val = m[2].trim();
+    if (key in obj) obj[key] = val;
+  }
 
-  // Bersihin price jika ada spasi aneh
-  if (item.price) item.price = item.price.replace(/\s+/g, " ");
-
-  return item;
+  if (obj.price) obj.price = obj.price.replace(/\s+/g, " ");
+  obj.created_at = new Date().toISOString();
+  return obj;
 }
 
 function validateItem(it) {
@@ -84,7 +74,7 @@ function validateItem(it) {
   if (!it.title) errs.push("title");
   if (!it.image) errs.push("image");
   if (!it.aff) errs.push("aff");
-  // price boleh kosong (nanti tampil 'Cek harga')
+  // price & gender opsional
   return errs;
 }
 
@@ -122,7 +112,7 @@ bot.onText(/^\/start\b/i, (msg) => {
   bot.sendMessage(
     msg.chat.id,
     `Hai! Kirim produk dengan format:
-    
+
 /add
 title: Nama Produk
 price: Rp19.000
@@ -152,7 +142,7 @@ Contoh:
 \`/add
 title: Kaos Polos Pria & Wanita | Baju Polos Termurah
 price: Rp19.000
-image: https://s12.gifyu.com/images/xxx.jpg
+image: https://s12.gifyu.com/images/xxxx.jpg
 aff: https://s.shopee.co.id/xxxxx
 gender: pria\``,
       { parse_mode: "Markdown", disable_web_page_preview: true }
@@ -181,13 +171,12 @@ gender: pria\``,
     try {
       await bot.sendPhoto(chatId, item.image, { caption: item.title });
     } catch (e) {
-      // Biarkan jika link gambar tidak bisa dipreview
+      // kalau gagal preview gambar, abaikan
     }
   }
 });
 
 // Fallback untuk pesan lain
 bot.on("message", (msg) => {
-  // biarin aja; fokus di /add
   if (!/^\/(add|start)\b/i.test(msg.text || "")) return;
 });

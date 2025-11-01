@@ -1,0 +1,16 @@
+{
+  "name": "ovrlay-telegram-bot",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Telegram bot to manage OVRLAY keywords.json and serve it via HTTP (Render-ready).",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
